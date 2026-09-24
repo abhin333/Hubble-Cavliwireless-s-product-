@@ -3,6 +3,9 @@ import Link from "next/link";
 import { products } from "@/lib/products";
 
 export default function Products() {
+
+
+
   return (
     <section id="products" className="bg-slate-50 py-20 lg:py-24">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
@@ -23,6 +26,7 @@ export default function Products() {
         <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {products.map(
             ({ id, icon: Icon, iconBg, iconColor, title, description }) => (
+              
               <div
                 key={id}
                 className="rounded-2xl border border-slate-200 bg-white p-6 transition-shadow hover:shadow-md"

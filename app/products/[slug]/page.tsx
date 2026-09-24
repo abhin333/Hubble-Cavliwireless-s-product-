@@ -1,6 +1,6 @@
 
 import { products } from "@/lib/products";
-import { notFound } from "next/navigation";
+
 
 export default async function ProductPage({
   params,
@@ -9,14 +9,12 @@ export default async function ProductPage({
 }) {
   const { slug } = await params;
 
-  console.log("dataaaaslug",slug);
+
   
-
   const product = products.find((item) => item.id === Number(slug));
-
-  if (!product) {
-    notFound();
-  }
+  
+  const Icon =product?.icon
+ 
 
 
     return (
@@ -30,25 +28,26 @@ export default async function ProductPage({
               Everything you need, built in
             </h2>
             <p className="mt-4 text-base leading-relaxed text-slate-500">
-              {product.title} comes with the tools your team needs to get up
+              {product?.title} comes with the tools your team needs to get up
               and running quickly — and to keep running as you scale.
             </p>
           </div>
   
           <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
               <div
-                key={product.id}
+                key={product?.id}
                 className="rounded-2xl border border-slate-200 bg-white p-6 transition-shadow hover:shadow-md"
               >
                 <div
-                  className={`flex h-12 w-12 items-center justify-center rounded-xl ${product.iconBg}`}
+                  className={`flex h-12 w-12 items-center justify-center rounded-xl ${product?.iconBg} `}
                 >
+                   <Icon size={22} className={product ?.iconColor} />
                 </div>
                 <h3 className="mt-5 text-lg font-semibold text-slate-900">
-                {product.title}
+                {product?.title}
                 </h3>
                 <p className="mt-2 text-sm leading-relaxed text-slate-500">
-                  {product.description}
+                  {product?.description}
                 </p>
               </div>
           </div>
