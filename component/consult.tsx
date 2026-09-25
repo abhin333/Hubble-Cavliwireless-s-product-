@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { Mail, Phone, MapPin, CheckCircle2, AlertCircle } from "lucide-react";
 
 const contactInfo = [
@@ -21,21 +21,46 @@ const contactInfo = [
   },
 ];
 
+type Status =
+  | { state: "idle" }
+  | { state: "success" }
+  | { state: "error"; message: string };
+
 export default function ConsultNow() {
-  const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [status, setStatus] = useState<Status>({ state: "idle" });
   const [loading, setLoading] = useState(false);
+
+  // Tracks the pending "auto-hide" timer so a second submit can cancel it —
+  // otherwise a leftover timer from a previous success/error could clear
+  // the *new* message at the wrong moment.
+  const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function showStatus(next: Status) {
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current);
+    }
+    setStatus(next);
+    hideTimeoutRef.current = setTimeout(() => {
+      setStatus({ state: "idle" });
+    }, 3000);
+  }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    setLoading(true);
-    setSubmitted(false);
-    setError(false);
-    setErrorMessage("");
+    // Grab a stable reference to the form BEFORE any `await`. React nulls
+    // out `e.currentTarget` once the synchronous part of the handler
+    // finishes, so using `e.currentTarget` after an awaited fetch throws
+    // "Cannot read properties of null (reading 'reset')".
+    const formEl = e.currentTarget;
 
-    const form = new FormData(e.currentTarget);
+    setLoading(true);
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current);
+    }
+    setStatus({ state: "idle" });
+
+    const form = new FormData(formEl);
     const payload = Object.fromEntries(form.entries());
 
     try {
@@ -57,19 +82,13 @@ export default function ConsultNow() {
             message = data.message;
           }
         } catch {
-          // Keep default error message
         }
 
         throw new Error(message);
       }
 
-      setSubmitted(true);
-
-      setTimeout(() => {
-        setSubmitted(false);
-      }, 3000);
-
-      e.currentTarget.reset();
+      showStatus({ state: "success" });
+      formEl.reset();
     } catch (err) {
       console.error("Consultation form error:", err);
 
@@ -78,14 +97,7 @@ export default function ConsultNow() {
           ? err.message
           : "Unable to send your message. Please try again.";
 
-      setErrorMessage(message);
-      setError(true);
-
-      // Hide error message after 3 seconds
-      setTimeout(() => {
-        setError(false);
-        setErrorMessage("");
-      }, 3000);
+      showStatus({ state: "error", message });
     } finally {
       setLoading(false);
     }
@@ -94,7 +106,6 @@ export default function ConsultNow() {
   return (
     <section id="consult" className="bg-white py-20 lg:py-24">
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-16 px-6 lg:grid-cols-2 lg:px-8">
-        {/* Left Content */}
         <div>
           <span className="text-sm font-semibold text-blue-600">
             Get In Touch
@@ -128,13 +139,11 @@ export default function ConsultNow() {
           </div>
         </div>
 
-        {/* Form */}
         <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
           <form
             onSubmit={handleSubmit}
             className="grid grid-cols-1 gap-5 sm:grid-cols-2"
           >
-            {/* Name */}
             <div>
               <label
                 htmlFor="name"
@@ -153,7 +162,6 @@ export default function ConsultNow() {
               />
             </div>
 
-            {/* Email */}
             <div>
               <label
                 htmlFor="email"
@@ -172,7 +180,6 @@ export default function ConsultNow() {
               />
             </div>
 
-            {/* Phone */}
             <div>
               <label
                 htmlFor="phone"
@@ -190,7 +197,6 @@ export default function ConsultNow() {
               />
             </div>
 
-            {/* Company */}
             <div>
               <label
                 htmlFor="company"
@@ -208,7 +214,6 @@ export default function ConsultNow() {
               />
             </div>
 
-            {/* Message */}
             <div className="sm:col-span-2">
               <label
                 htmlFor="message"
@@ -227,7 +232,6 @@ export default function ConsultNow() {
               />
             </div>
 
-            {/* Submit */}
             <div className="sm:col-span-2">
               <button
                 type="submit"
@@ -238,8 +242,7 @@ export default function ConsultNow() {
               </button>
             </div>
 
-            {/* Success Message */}
-            {submitted && (
+            {status.state === "success" && (
               <div className="flex items-center gap-2 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 sm:col-span-2">
                 <CheckCircle2 size={18} />
 
@@ -249,14 +252,7 @@ export default function ConsultNow() {
               </div>
             )}
 
-            {/* Error Message */}
-            {error && (
-              <div className="flex items-center gap-2 rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700 sm:col-span-2">
-                <AlertCircle size={18} />
-
-                <span>{errorMessage}</span>
-              </div>
-            )}
+           
           </form>
         </div>
       </div>
