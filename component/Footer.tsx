@@ -1,17 +1,13 @@
-// components/Footer.tsx
-// Server component — fetches live exhibitor data for the footer list.
-
 import Link from "next/link";
-// import { Linkedin, Twitter, Youtube, Github } from "react-icons";
-import { getExhibitors } from "@/lib/exhibitor";
+import { getExhibitorLocations } from "@/lib/exhibitor";
 import { FaLinkedin } from "react-icons/fa";
 import { FaSquareXTwitter } from "react-icons/fa6";
 import { FaGithub } from "react-icons/fa";
 import { FaYoutube } from "react-icons/fa6";
 
 export default async function Footer() {
-  const exhibitors = await getExhibitors();
-  const featured = exhibitors.slice(0, 5);
+  const exhibitors = await getExhibitorLocations();
+  const featured = exhibitors.slice(0, 7);
 
   return (
     <footer className="bg-[#0a1428] pt-16 text-slate-300">
@@ -37,9 +33,9 @@ export default async function Footer() {
           <h3 className="text-sm font-semibold text-white">Quick Links</h3>
           <ul className="mt-4 space-y-2 text-sm">
             <li><Link href="/" className="hover:text-white">Home</Link></li>
-            <li><Link href="/products" className="hover:text-white">Products</Link></li>
-            <li><Link href="/about" className="hover:text-white">About</Link></li>
-            <li><Link href="/contact" className="hover:text-white">Contact</Link></li>
+            <li><Link href="#products" className="hover:text-white">Products</Link></li>
+            <li><Link href="#about" className="hover:text-white">About</Link></li>
+            <li><Link href="#contact" className="hover:text-white">Contact</Link></li>
           </ul>
         </div>
 
@@ -50,20 +46,32 @@ export default async function Footer() {
             <span className="text-slate-500">({exhibitors.length})</span>
           </h3>
           <ul className="mt-4 space-y-2 text-sm">
-            {featured.map((exhibitor) => (
-              <li key={exhibitor.id}>
-                <Link
-                  href={`/exhibitors/${exhibitor.id}`}
-                  className="hover:text-white"
-                >
-                  {exhibitor.name}
-                </Link>
-              </li>
-            ))}
+            {featured.map((exhibitor) => {
+              const location = [
+                exhibitor.hall_no && `Hall ${exhibitor.hall_no}`,
+                exhibitor.booth_no && `Booth ${exhibitor.booth_no}`,
+              ]
+                .filter(Boolean)
+                .join(" · ");
+
+              return (
+                <li key={exhibitor.location_id ?? exhibitor.exhibitor_id}>
+                  <Link
+                    href={`/exhibitors/${exhibitor.exhibitor_id}`}
+                    className="flex items-baseline justify-between gap-2 hover:text-white"
+                  >
+                    <span className="truncate">{exhibitor.exhibitor_name}</span>
+                    {location && (
+                      <span className="shrink-0 text-xs text-slate-500">{location}</span>
+                    )}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
           {exhibitors.length > featured.length && (
             <Link
-              href="/exhibitors"
+              href="#"
               className="mt-3 inline-block text-sm font-medium text-blue-400 hover:text-blue-300"
             >
               View all {exhibitors.length} →

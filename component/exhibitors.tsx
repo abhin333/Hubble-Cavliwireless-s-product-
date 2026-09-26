@@ -1,6 +1,3 @@
-// components/ExhibitorTicker.tsx
-// Server component — fetches live exhibitor data on each request/ISR cycle
-// and renders a thin strip above the main nav.
 
 import { getExhibitors } from "@/lib/exhibitor";
 

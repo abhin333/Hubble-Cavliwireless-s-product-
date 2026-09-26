@@ -64,35 +64,17 @@ export default function Hero() {
         </div>
 
         <div className="relative mx-auto aspect-square w-full max-w-md">
-            <div className="relative h-full w-full">
-                <Image
-                  src="/src/assets/hubbl.png"
-                  alt="Hubble Cloud"
-                  className="h-full w-full object-contain"
-                  width={1000}
-                  height={1000}
-                  priority
-                />
-            </div> 
-            </div>
-          {/* <div className="absolute inset-0 rounded-full border border-blue-400/20" /> */}
-          {/* <div className="absolute inset-6 rounded-full border border-blue-400/20" /> */}
-
-          {/* <div className="absolute inset-10 rounded-full bg-[radial-gradient(circle_at_35%_30%,#3b82f6,#0a1428_70%)] shadow-[0_0_80px_rgba(59,130,246,0.35)]" /> */}
-          {/* <div className="absolute left-1/2 top-1/2 flex h-24 w-24 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full border-2 border-white/70 bg-[#0a1428]/80 text-white backdrop-blur">
-            <Cloud size={22} className="mb-0.5" />
-            <span className="text-[11px] font-semibold">Hubble</span>
-          </div> */}
-
-          {/* {orbitIcons.map(({ Icon, className }, idx) => (
-            <div
-              key={idx}
-              className={`absolute flex h-11 w-11 items-center justify-center rounded-full border border-white/40 bg-[#0a1428] text-white shadow-lg ${className}`}
-            >
-              <Icon size={18} />
-            </div>
-          ))} */}
-        {/* </div> */}
+          <div className="relative h-full w-full">
+            <Image
+              src="/src/assets/hubbl.png"
+              alt="Hubble Cloud"
+              className="h-full w-full object-contain"
+              width={1000}
+              height={1000}
+              priority
+            />
+          </div>
+        </div>
       </div>
     </section>
   );

@@ -2,19 +2,22 @@
 
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
-import { Menu, X, Users, Globe, ChevronDown, Database, ArrowRight, Building2 } from "lucide-react";
+import { Menu, X, Users, Globe, ChevronDown, Database, ArrowRight, Building2, MapPin } from "lucide-react";
+import Image from "next/image";
 
 interface Exhibitor {
   id?: number | string;
   name: string;
   country?: string;
+  hall_no?: string;
+  booth_no?: string;
 }
-
+const count = process.env.NEXT_PUBLIC_API_EXHIBITOR_LIMIT;
 const navLinks = [
   { label: "Home", href: "/" },
-  { label: "Products", href: "/products" },
-  { label: "About", href: "/about" },
-  { label: "Contact", href: "/contact" },
+  { label: "Products", href: "#products" },
+  { label: "About", href: "#about" },
+  { label: "Contact", href: "#contact" },
 ];
 
 export default function Navbar() {
@@ -27,7 +30,7 @@ export default function Navbar() {
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Fetch live stats & dynamic exhibitor list from FastAPI
+  // Fetch live stats & dynamic exhibitor list (with hall/booth) from FastAPI
   useEffect(() => {
     async function fetchData() {
       try {
@@ -38,19 +41,24 @@ export default function Navbar() {
           setStats(statsData);
         }
 
-        // Fetch actual exhibitor items for the dropdown list.
-        // The FastAPI endpoint returns { count, results }, where `count` is
-        // the TOTAL number of rows in the table and `results` is the
-        // limited page. We still fall back to a bare array or `{ data }`
-        // just in case an older backend build is running.
-        const exhibitorsRes = await fetch("/api/exhibitors?limit=6");
+        
+        const exhibitorsRes = await fetch(`/api/exhibitor-locations?limit=${count}`);
         if (exhibitorsRes.ok) {
           const exhibitorsData = await exhibitorsRes.json();
-          if (Array.isArray(exhibitorsData)) {
-            setExhibitorsList(exhibitorsData);
-          } else {
-            setExhibitorsList(exhibitorsData.results ?? exhibitorsData.data ?? []);
-          }
+          const rows = Array.isArray(exhibitorsData)
+            ? exhibitorsData
+            : exhibitorsData.results ?? exhibitorsData.data ?? [];
+
+       
+          const normalized: Exhibitor[] = rows.map((row: any) => ({
+            id: row.exhibitor_id ?? row.id,
+            name: row.exhibitor_name ?? row.name,
+            country: row.country,
+            hall_no: row.hall_no,
+            booth_no: row.booth_no,
+          }));
+
+          setExhibitorsList(normalized);
         }
       } catch (error) {
         console.error("Failed to load navbar data:", error);
@@ -77,30 +85,15 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0a1428]">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
 
-        {/* Logo */}
         <Link href="/" className="flex shrink-0 items-center gap-2">
-          <svg
-            width="28"
-            height="28"
-            viewBox="0 0 24 24"
-            fill="none"
+          <Image
+            src="/src/assets/hubble-logo.png"
+            alt="Hubble Logo"
+            width={120}
+            height={120}
             className="text-blue-500"
-          >
-            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
-            <path
-              d="M8 12a4 4 0 0 1 4-4"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-            <path
-              d="M16 12a4 4 0 0 1-4 4"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-          </svg>
-          <span className="text-xl font-semibold text-white">Hubble</span>
+            priority
+          />
         </Link>
 
         {/* Desktop Navigation */}
@@ -131,7 +124,7 @@ export default function Navbar() {
               <span>
                 Exhibitors:{" "}
                 <strong className="text-white">
-                  {loading ? "..." : stats.total_exhibitors}
+                  {loading ? "..." : exhibitorsList.length}
                 </strong>
               </span>
             </div>
@@ -143,7 +136,7 @@ export default function Navbar() {
               <span>
                 Countries:{" "}
                 <strong className="text-white">
-                  {loading ? "..." : stats.total_countries}
+                  {loading ? "..." : exhibitorsList.length}
                 </strong>
               </span>
             </div>
@@ -180,18 +173,31 @@ export default function Navbar() {
                   exhibitorsList.map((item, idx) => (
                     <div
                       key={item.id || idx}
-                      className="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/5 hover:border-blue-500/30 transition-colors"
+                      className="flex flex-col gap-1 p-2 rounded-lg bg-white/5 border border-white/5 hover:border-blue-500/30 transition-colors"
                     >
-                      <div className="flex items-center gap-2 overflow-hidden">
-                        <Building2 size={14} className="text-blue-400 shrink-0" />
-                        <span className="text-xs font-medium text-slate-200 truncate">
-                          {item.name}
-                        </span>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 overflow-hidden">
+                          <Building2 size={14} className="text-blue-400 shrink-0" />
+                          <span className="text-xs font-medium text-slate-200 truncate">
+                            {item.name}
+                          </span>
+                        </div>
+                        {item.country && (
+                          <span className="text-[10px] font-normal text-slate-400 bg-white/5 px-2 py-0.5 rounded border border-white/5 shrink-0 ml-2">
+                            {item.country}
+                          </span>
+                        )}
                       </div>
-                      {item.country && (
-                        <span className="text-[10px] font-normal text-slate-400 bg-white/5 px-2 py-0.5 rounded border border-white/5 shrink-0 ml-2">
-                          {item.country}
-                        </span>
+
+                      {(item.hall_no || item.booth_no) && (
+                        <div className="flex items-center gap-1.5 pl-[22px] text-[10px] text-blue-300/90">
+                          <MapPin size={11} className="text-blue-400 shrink-0" />
+                          <span>
+                            {item.hall_no && <>Hall {item.hall_no}</>}
+                            {item.hall_no && item.booth_no && " · "}
+                            {item.booth_no && <>Booth {item.booth_no}</>}
+                          </span>
+                        </div>
                       )}
                     </div>
                   ))
@@ -214,7 +220,7 @@ export default function Navbar() {
 
         {/* Desktop CTA */}
         <Link
-          href="/consult"
+          href="#consult"
           className="hidden rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-500 md:inline-block"
         >
           Consult Now
@@ -250,7 +256,13 @@ export default function Navbar() {
                 {exhibitorsList.slice(0, 3).map((item, idx) => (
                   <div key={item.id || idx} className="flex justify-between items-center text-slate-300 text-[11px]">
                     <span className="truncate">{item.name}</span>
-                    <span className="text-slate-500 text-[10px]">{item.country}</span>
+                    <span className="text-slate-500 text-[10px] shrink-0 ml-2">
+                      {item.hall_no || item.booth_no
+                        ? [item.hall_no && `Hall ${item.hall_no}`, item.booth_no && `Booth ${item.booth_no}`]
+                            .filter(Boolean)
+                            .join(" · ")
+                        : item.country}
+                    </span>
                   </div>
                 ))}
               </div>
