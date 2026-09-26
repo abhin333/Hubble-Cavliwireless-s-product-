@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Frontend — Exhibitor Directory (Next.js)
 
-## Getting Started
+Next.js app showing live exhibitor stats, an exhibitor directory with
+hall/booth numbers (navbar dropdown + footer), product pages, and a
+consultation form — all backed by the FastAPI service in `../backend`.
 
-First, run the development server:
+## 1. Project setup
+
+### Docker Compose (preferred, from repo root)
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+docker compose up --build frontend
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Runs at `http://localhost:3000` and talks to the backend at
+`http://backend:8000` inside the Compose network.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Manual setup (without Docker)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Requires Node.js 18+.
 
-## Learn More
+```bash
+cd frontend
+pnpm install
+add .env   # set API_BASE_URL to your backend , that env file is alrfedy added in this repo
+pnpm run dev 
+```
 
-To learn more about Next.js, take a look at the following resources:
+Runs at `http://localhost:3000`, calling the backend URL from
+`API_BASE_URL` (defaults to `http://localhost:8000` if the backend is
+running locally without Docker).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Environment variables (`.env.local`)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Variable        | Default                 | Description                                   |
+|-----------------|--------------------------|------------------------------------------------|
+| `API_BASE_URL`  | `http://localhost:8000` | Base URL of the FastAPI backend (server-side fetches) |
 
-## Deploy on Vercel
+**Troubleshooting:** if `API_BASE_URL` doesn't seem to take effect:
+- The file must be named `.env.local` and sit next to `package.json` (not inside `app/` or `lib/`).
+- Next.js only reads env files at dev-server startup — restart `npm run dev` after changing it.
+- No `NEXT_PUBLIC_` prefix needed here since `API_BASE_URL` is only read server-side, in `lib/exhibitor.ts`.
+- Under Docker Compose, this value comes from the `environment:` block in the root `docker-compose.yml` instead — `.env.local` is only used when running `npm run dev` directly on your machine.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 2. Key pages/components
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| File | Purpose |
+|---|---|
+| `components/Navbar.tsx` | Live exhibitor count + dropdown list with hall/booth, mobile menu variant |
+| `components/Footer.tsx` | "Live Exhibitors" list with hall/booth, pulled server-side |
+| `app/products/[slug]/page.tsx` | Product detail page with a feature highlight card |
+| `app/not-found.tsx` | Custom 404 page |
+| `lib/exhibitor.ts` | Server-side fetch helpers: `getExhibitors()`, `getExhibitorLocations()` |
+
+## 3. Deploying
+
+This app is set up to deploy on **Vercel**. Set the `API_BASE_URL`
+environment variable in the Vercel project settings to point at wherever
+the backend is hosted (e.g. Railway), since server components fetch it at
+request/build time.
