@@ -1,13 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    async rewrites() {
-      return [
-        {
-          source: '/api/:path*',
-          destination: 'http://127.0.0.1:8000/api/:path*', // Forward to FastAPI
-        },
-      ]
-    },
-  };
-  
-  export default nextConfig;
+  async rewrites() {
+    // If running in Docker, fallback to host.docker.internal or backend service name
+    const backendUrl = process.env.BACKEND_URL || 'http://host.docker.internal:8000';
+
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${backendUrl}/api/:path*`,
+      },
+    ];
+  },
+};
+
+export default nextConfig;
