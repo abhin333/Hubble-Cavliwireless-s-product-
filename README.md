@@ -4,6 +4,11 @@ Next.js app showing live exhibitor stats, an exhibitor directory with
 hall/booth numbers (navbar dropdown + footer), product pages, and a
 consultation form — all backed by the FastAPI service in `../backend`.
 
+
+# with docker 
+docker compose up --build -d
+ 
+
 ## 1. Project setup
 
 ### Docker Compose (preferred, from repo root)
